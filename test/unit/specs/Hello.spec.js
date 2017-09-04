@@ -1,4 +1,5 @@
 // http://chaijs.com/guide/styles/#expect
+// http://chaijs.com/api/bdd/
 
 import Vue from 'vue'
 import Hello from '@/components/Hello'
