@@ -152,7 +152,7 @@ function getEntry(globPath) {
             basename = path.basename(entry, path.extname(entry));
             if (entry.split('/').length > 4) {
                 tmp = entry.split('/').splice(-3);
-                pathname = tmp.splice(0, 1) + '/' + basename; // 正确输出js和html的路径
+                pathname = tmp[0] + '/' + tmp[1] // 正确输出js和html的路径
                 entries[pathname] = entry;
             } else {
                 entries[basename] = entry;
@@ -163,13 +163,10 @@ function getEntry(globPath) {
 }
 
 let pages = getEntry(['./src/pages/*_prod.html', './src/pages/*/*_prod.html']);
-
 for (let pathname in pages) {
     // 配置生成的html文件，定义路径等
-    let name = pathname.split('_')[0]
-
     let conf = {
-        filename: name + '.html',
+        filename: pathname + '.html',
         template: pages[pathname],   // 模板路径
         inject: true,              // js插入位置
         minify: {
@@ -181,8 +178,8 @@ for (let pathname in pages) {
         chunksSortMode: 'dependency'
     };
 
-    if (name in webpackConfig.entry) {
-        conf.chunks = ['manifest', 'vendor', name];
+    if (pathname in webpackConfig.entry) {
+        conf.chunks = ['manifest', 'vendor', pathname];
         conf.hash = true;
     }
 

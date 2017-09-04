@@ -1,19 +1,25 @@
-var path = require('path')
-var utils = require('./utils')
-var webpack = require('webpack')
-var config = require('../config')
-var merge = require('webpack-merge')
-var baseWebpackConfig = require('./webpack.base.conf')
-var CopyWebpackPlugin = require('copy-webpack-plugin')
-var HtmlWebpackPlugin = require('html-webpack-plugin')
-var ExtractTextPlugin = require('extract-text-webpack-plugin')
+let path = require('path')
+let utils = require('./utils')
+let webpack = require('webpack')
+let config = require('../config')
+let merge = require('webpack-merge')
+let baseWebpackConfig = require('./webpack.base.conf')
+let CopyWebpackPlugin = require('copy-webpack-plugin')
+let HtmlWebpackPlugin = require('html-webpack-plugin')
+let ExtractTextPlugin = require('extract-text-webpack-plugin')
 let CleanWebpackPlugin = require('clean-webpack-plugin')
-var OptimizeCSSPlugin = require('optimize-css-assets-webpack-plugin')
-var glob = require("glob")
+let OptimizeCSSPlugin = require('optimize-css-assets-webpack-plugin')
+let glob = require("glob")
 
-var env = require('../config/gray.env') // 灰度测试环境
+function resolve(dir) {
+    return path.join(__dirname, '..', dir)
+}
 
-var webpackConfig = merge(baseWebpackConfig, {
+let env = process.env.NODE_ENV === 'testing'
+    ? require('../config/test.env')
+    : config.gray.env
+
+let webpackConfig = merge(baseWebpackConfig, {
     module: {
         rules: utils.styleLoaders({
             sourceMap: config.build.productionSourceMap,
@@ -58,22 +64,22 @@ var webpackConfig = merge(baseWebpackConfig, {
         // generate dist index.html with correct asset hash for caching.
         // you can customize output by editing /index.html
         // see https://github.com/ampedandwired/html-webpack-plugin
-        new HtmlWebpackPlugin({
-            filename: process.env.NODE_ENV === 'testing'
-                ? 'index.html'
-                : config.build.index,
-            template: 'index.html',
-            inject: true,
-            minify: {
-                removeComments: true,
-                collapseWhitespace: true,
-                removeAttributeQuotes: true
-                // more options:
-                // https://github.com/kangax/html-minifier#options-quick-reference
-            },
-            // necessary to consistently work with multiple chunks via CommonsChunkPlugin
-            chunksSortMode: 'dependency'
-        }),
+        // new HtmlWebpackPlugin({
+        //   filename: process.env.NODE_ENV === 'testing'
+        //     ? 'index.html'
+        //     : config.build.index,
+        //   template: 'index.html',
+        //   inject: true,
+        //   minify: {
+        //     removeComments: true,
+        //     collapseWhitespace: true,
+        //     removeAttributeQuotes: true
+        //     // more options:
+        //     // https://github.com/kangax/html-minifier#options-quick-reference
+        //   },
+        //   // necessary to consistently work with multiple chunks via CommonsChunkPlugin
+        //   chunksSortMode: 'dependency'
+        // }),
         // keep module.id stable when vender modules does not change
         new webpack.HashedModuleIdsPlugin(),
         // split vendor js into its own file
@@ -108,7 +114,7 @@ var webpackConfig = merge(baseWebpackConfig, {
 })
 
 if (config.build.productionGzip) {
-    var CompressionWebpackPlugin = require('compression-webpack-plugin')
+    let CompressionWebpackPlugin = require('compression-webpack-plugin')
 
     webpackConfig.plugins.push(
         new CompressionWebpackPlugin({
@@ -126,9 +132,10 @@ if (config.build.productionGzip) {
 }
 
 if (config.build.bundleAnalyzerReport) {
-    var BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin
+    let BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin
     webpackConfig.plugins.push(new BundleAnalyzerPlugin())
 }
+
 
 /**
  **  multi-pages config
@@ -145,7 +152,7 @@ function getEntry(globPath) {
             basename = path.basename(entry, path.extname(entry));
             if (entry.split('/').length > 4) {
                 tmp = entry.split('/').splice(-3);
-                pathname = tmp.splice(0, 1) + '/' + basename; // 正确输出js和html的路径
+                pathname = tmp[0] + '/' + tmp[1] // 正确输出js和html的路径
                 entries[pathname] = entry;
             } else {
                 entries[basename] = entry;
@@ -156,13 +163,10 @@ function getEntry(globPath) {
 }
 
 let pages = getEntry(['./src/pages/*_prod.html', './src/pages/*/*_prod.html']);
-
 for (let pathname in pages) {
     // 配置生成的html文件，定义路径等
-    let name = pathname.split('_')[0]
-
     let conf = {
-        filename: name + '.html',
+        filename: pathname + '.html',
         template: pages[pathname],   // 模板路径
         inject: true,              // js插入位置
         minify: {
@@ -174,8 +178,8 @@ for (let pathname in pages) {
         chunksSortMode: 'dependency'
     };
 
-    if (name in webpackConfig.entry) {
-        conf.chunks = ['manifest', 'vendor', name];
+    if (pathname in webpackConfig.entry) {
+        conf.chunks = ['manifest', 'vendor', pathname];
         conf.hash = true;
     }
 
