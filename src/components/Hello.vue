@@ -27,6 +27,11 @@
             return {
                 msg: 'Welcome to Your Vue.js App'
             }
+        },
+        methods: {
+            test () {
+                return this.msg
+            }
         }
     }
 </script>
